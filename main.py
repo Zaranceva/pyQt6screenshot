@@ -23,7 +23,7 @@ class MyWindow(QtWidgets.QWidget):
         self.newThread = QmyThread()
 
         self.btnQuit.clicked.connect(QtWidgets.QApplication.instance().quit)
-        self.btnStartTread. connect(self.on_clicked)
+        self.btnStartTread.clicked.connect(self.on_clicked)
         self.newThread.started.connect(self.on_started)
         self.newThread.finished.connect(self.on_finished)
         self.newThread.mysignal.connect(self.on_change,QtCore.Qt.ConnectionType.QueuedConnection)
