@@ -30,21 +30,23 @@ import ftplib
             source_address (tuple | None) – A 2-tuple (host, port) for the socket to bind to as its source address before connecting.
             encoding (str) – The encoding for directories and filenames (default: 'utf-8').
 '''
+find_file_name = 'main.py'
 
 con_ftp = ftplib.FTP(host='192.168.0.145')
 con_ftp.login( user='user', passwd='Q1werty')
-dir_c = [con_ftp.dir('c')]
-#print(dir_c)
-for line in dir_c:
-    print(line)
+con_ftp.cwd('c')
+dir_c = con_ftp.nlst()
 
-with open('main.py', 'rb') as send_file:
-    con_ftp.storbinary('STOR main.py', send_file)
-
-print('Send Done')
-
-with open('main2.py', 'wb') as res_file:
+if find_file_name in dir_c:
+    print(f'нашли {find_file_name}')
+#
+# with open('main.py', 'rb') as send_file:
+#     con_ftp.storbinary('STOR main.py', send_file)
+#
+# print('Send Done')
+#
+with open('main_tmp.py', 'wb') as res_file:
     con_ftp.retrbinary('RETR main.py', res_file.write)
-
-print('recive Done')
+#
+# print('recive Done')
 con_ftp.quit()
