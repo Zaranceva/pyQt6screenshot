@@ -30,23 +30,38 @@ import ftplib
             source_address (tuple | None) – A 2-tuple (host, port) for the socket to bind to as its source address before connecting.
             encoding (str) – The encoding for directories and filenames (default: 'utf-8').
 '''
-find_file_name = 'main.py'
+find_file_name = 'name.txt'
+computer_name = 'user1'
+
+
 
 con_ftp = ftplib.FTP(host='192.168.0.145')
 con_ftp.login( user='user', passwd='Q1werty')
 con_ftp.cwd('c')
 dir_c = con_ftp.nlst()
 
+def get_file():
+    with open('name_tmp.txt', 'wb') as res_file:
+        con_ftp.retrbinary(f'RETR {find_file_name}', res_file.write)
+    return 0
+
+def create_local_file():
+    print('файл для отправки ненайден')
+    with open(find_file_name, 'w') as create_file:
+        create_file.write(computer_name)
+    return 0
+
+def send_file():
+    with open(find_file_name, 'rb') as send_file:
+        con_ftp.storbinary(f'STOR {find_file_name}', send_file)
+    print(f'Send file {find_file_name}  Done')
+    return 0
+
 if find_file_name in dir_c:
-    print(f'нашли {find_file_name}')
-#
-# with open('main.py', 'rb') as send_file:
-#     con_ftp.storbinary('STOR main.py', send_file)
-#
-# print('Send Done')
-#
-with open('main_tmp.py', 'wb') as res_file:
-    con_ftp.retrbinary('RETR main.py', res_file.write)
+    print(f'Нашли {find_file_name}')
+else:
+    create_local_file()
+    send_file()
 #
 # print('recive Done')
 con_ftp.quit()
