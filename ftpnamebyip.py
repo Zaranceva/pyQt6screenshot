@@ -14,10 +14,10 @@
 6.
 
 '''
-addr_names = (("192.168.0.145",'user'))
+addr_names = (('192.168.0.145','user'),)
 
 import ftplib
-
+import os
 '''
  class ftplib.FTP(host='', user='', passwd='', acct='', timeout=None, source_address=None, *, encoding='utf-8')¶
     Return a new instance of the FTP class.
@@ -32,16 +32,17 @@ import ftplib
 '''
 find_file_name = 'name.txt'
 computer_name = 'user1'
+remoute_comp_name = ''
 
+print(addr_names[0][0])
 
-
-con_ftp = ftplib.FTP(host='192.168.0.145')
+con_ftp = ftplib.FTP(host=addr_names[0][0])
 con_ftp.login( user='user', passwd='Q1werty')
 con_ftp.cwd('c')
 dir_c = con_ftp.nlst()
 
 def get_file():
-    with open('name_tmp.txt', 'wb') as res_file:
+    with open('tmp_' + find_file_name, 'wb') as res_file:
         con_ftp.retrbinary(f'RETR {find_file_name}', res_file.write)
     return 0
 
@@ -57,11 +58,28 @@ def send_file():
     print(f'Send file {find_file_name}  Done')
     return 0
 
+def check_local_file():
+    try:
+        with open('tmp_' + find_file_name, 'r') as tmp_file:
+           global remoute_comp_name
+           remoute_comp_name = tmp_file.readline()
+
+    except:
+        print('файл не найден')
+
+    print(f'Имя удаленного компьютера : {remoute_comp_name}')
+
+
+
 if find_file_name in dir_c:
-    print(f'Нашли {find_file_name}')
+    print(f'На сервере Ftp:{addr_names[0][0]} Нашли {find_file_name}')
+    get_file()
+    check_local_file()
+
 else:
     create_local_file()
     send_file()
+
 #
 # print('recive Done')
 con_ftp.quit()
