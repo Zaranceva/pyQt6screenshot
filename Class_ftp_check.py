@@ -15,10 +15,15 @@ class ConnrectToFtp(ftplib.FTP):
                 encoding (str) – The encoding for directories and filenames (default: 'utf-8').
     '''
     def __init__(self, host = '0.0.0.0'):
+        # соединяемся с сервером и  сохраняем список директории диска С
+
         ftplib.FTP.__init__(self, host=host, user='user', passwd='Q1werty')
         self.dir_list = []
         self.cwd('c')
         self.dir_list = self.nlst()
+        self.current_ip = host
+        self.local_name = ''
+        self.remote_name = ''
 
     def find_comp_name(self,filename='name.txt', compname=''):
         # Ищем в директории файл filename  открываем и сверяем имя компьютера.
@@ -28,8 +33,19 @@ class ConnrectToFtp(ftplib.FTP):
             with open(f'tmp_{filename}', 'bw') as tmp_file:
                 self.retrbinary(f'RETR {filename}', tmp_file.write)
             with open(f'tmp_{filename}', 'r') as tmp_file:
-                compname = tmp_file.readline()
-        return compname
+                self.remote_name = tmp_file.readline()
+        return self.remote_name
+
+    def create_temp_file(self):
+        # создает временный файл с правильными данными по имени компьютера
+
+        pass
+
+
+    def send_file_name(self):
+        # отправляет временный файл с правильными данными об имени компьютера
+
+        pass
 
 
 if __name__ == '__main__':
