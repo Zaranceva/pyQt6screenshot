@@ -1,5 +1,7 @@
 import ftplib
 import os
+import json
+
 
 class ConnrectToFtp(ftplib.FTP):
     '''
@@ -14,50 +16,63 @@ class ConnrectToFtp(ftplib.FTP):
                 source_address (tuple | None) – A 2-tuple (host, port) for the socket to bind to as its source address before connecting.
                 encoding (str) – The encoding for directories and filenames (default: 'utf-8').
     '''
-    def __init__(self, host = '0.0.0.0'):
+    FILENAME = 'name.txt'
+
+    def __init__(self, host = '0.0.0.0', compname = ''):
         # соединяемся с сервером и  сохраняем список директории диска С
 
-        ftplib.FTP.__init__(self, host=host, user='user', passwd='Q1werty')
+        ftplib.FTP.__init__(self, host=host, user='user', passwd='Q1werty', timeout= 2)
         self.dir_list = []
         self.cwd('c')
         self.dir_list = self.nlst()
         self.current_ip = host
-        self.local_name = ''
+        self.local_name = compname
         self.remote_name = ''
 
-    def find_comp_name(self,filename='name.txt', compname=''):
+
+    def find_comp_name(self,filename= FILENAME):
         # Ищем в директории файл filename  открываем и сверяем имя компьютера.
         # Возвращаем найденое имя или пустую строку
         if filename in self.dir_list:
-            print("имя найдено, открываем и проверяем имя компьютера")
+            print("имя найдено, открываем и возвращаем имя компьютера")
             with open(f'tmp_{filename}', 'bw') as tmp_file:
                 self.retrbinary(f'RETR {filename}', tmp_file.write)
             with open(f'tmp_{filename}', 'r') as tmp_file:
                 self.remote_name = tmp_file.readline()
+        else:
+            print('файл не найден')
+            self.remote_name = ''
+
         return self.remote_name
 
-    def create_temp_file(self):
+    def create_and_send_temp_file(self, filename= FILENAME):
         # создает временный файл с правильными данными по имени компьютера
-
-        pass
-
-
-    def send_file_name(self):
-        # отправляет временный файл с правильными данными об имени компьютера
-
-        pass
+        with open(f'send_tmp_{filename}','w') as tmp_file:
+            tmp_file.write(f'{self.local_name}')
+        with open(f'send_tmp_{filename}','rb') as tmp_file:
+            self.storbinary(f'STOR {filename}', tmp_file)
+        print(f'файл {filename} с именем компьютера {self.local_name} отправлен')
 
 
 if __name__ == '__main__':
 
-    lists_ip_names = (('192.168.0.145', 'user1'),('192.168.0.158', 'user2'),('192.168.0.31', 'terminal'))
+    with open('ip_name.json','r') as ip_name:
+        list_names_ip = json.load(ip_name)
 
-    for item in lists_ip_names:
+    print(list_names_ip)
 
-        ftp_conn = ConnrectToFtp(host=item[0])
-        remout_comp_name = ftp_conn.find_comp_name(filename='name.txt')
-        if remout_comp_name == item[1]:
-            print(remout_comp_name, item[0])
-        else:
-            print(' ', item[0])
-        ftp_conn.close()
+    for key, item in list_names_ip.items() :
+        try:
+            ftp_conn = ConnrectToFtp(compname=key, host=item)
+            remout_comp_name = ftp_conn.find_comp_name()
+            if remout_comp_name == key:
+                print(remout_comp_name, key)
+            else:
+                if remout_comp_name == '':
+                    ftp_conn.create_and_send_temp_file()
+                else:
+                    print(remout_comp_name, key, item)
+            ftp_conn.close()
+        except:
+            print(f'Соединение с {item} говно!')
+
