@@ -51,10 +51,15 @@ class ConnrectToFtp(ftplib.FTP):
             tmp_file.write(f'{self.local_name}')
         with open(f'send_tmp_{filename}','rb') as tmp_file:
             self.storbinary(f'STOR {filename}', tmp_file)
-        print(f'файл {filename} с именем компьютера {self.local_name} отправлен')
+        print(f'файл {filename} с именем компьютера {self.local_name} отправлен на {self.current_ip}')
 
+    def del_remoute_file(self):
+        self.delete(self.FILENAME)
 
 if __name__ == '__main__':
+
+    # если нужно перезаписать имя компа на удаленном хосте, то ставим True.
+    del_all_wrong_ips = False
 
     with open('ip_name.json','r') as ip_name:
         list_names_ip = json.load(ip_name)
@@ -66,12 +71,15 @@ if __name__ == '__main__':
             ftp_conn = ConnrectToFtp(compname=key, host=item)
             remout_comp_name = ftp_conn.find_comp_name()
             if remout_comp_name == key:
-                print(remout_comp_name, key)
+                print(remout_comp_name, item)
             else:
                 if remout_comp_name == '':
                     ftp_conn.create_and_send_temp_file()
                 else:
                     print(remout_comp_name, key, item)
+                    if del_all_wrong_ips: ftp_conn.del_remoute_file()
+
+
             ftp_conn.close()
         except:
             print(f'Соединение с {item} говно!')
