@@ -1,7 +1,7 @@
 import ftplib
 import os
 import json
-
+import time
 
 class ConnrectToFtp(ftplib.FTP):
     '''
@@ -22,25 +22,28 @@ class ConnrectToFtp(ftplib.FTP):
         # соединяемся с сервером и  сохраняем список директории диска С
 
         ftplib.FTP.__init__(self, host=host, user='user', passwd='Q1werty', timeout= 2)
+        self.file_log =open('log_file.txt', 'a',encoding='utf-8',newline='\n')
         self.dir_list = []
         self.cwd('c')
         self.dir_list = self.nlst()
         self.current_ip = host
         self.local_name = compname
         self.remote_name = ''
+        self.time_stamp = f'{time.asctime()}  '
 
 
     def find_comp_name(self,filename= FILENAME):
         # Ищем в директории файл filename  открываем и сверяем имя компьютера.
         # Возвращаем найденое имя или пустую строку
         if filename in self.dir_list:
-            print("имя найдено, открываем и возвращаем имя компьютера")
+            #print("имя найдено, открываем и возвращаем имя компьютера")
             with open(f'tmp_{filename}', 'bw') as tmp_file:
                 self.retrbinary(f'RETR {filename}', tmp_file.write)
             with open(f'tmp_{filename}', 'r') as tmp_file:
                 self.remote_name = tmp_file.readline()
         else:
-            print('файл не найден')
+            print(time_stamp, 'файл не найден')
+            self.file_log.write(time_stamp, 'файл не найден')
             self.remote_name = ''
 
         return self.remote_name
@@ -52,35 +55,39 @@ class ConnrectToFtp(ftplib.FTP):
         with open(f'send_tmp_{filename}','rb') as tmp_file:
             self.storbinary(f'STOR {filename}', tmp_file)
         print(f'файл {filename} с именем компьютера {self.local_name} отправлен на {self.current_ip}')
-
+        self.file_log.write(f'{self.time_stamp}файл {filename} с именем компьютера {self.local_name} отправлен на {self.current_ip}')
     def del_remoute_file(self):
         self.delete(self.FILENAME)
-
+        print(self.time_stamp, 'Удаление ', self.FILENAME)
 if __name__ == '__main__':
+
 
     # если нужно перезаписать имя компа на удаленном хосте, то ставим True.
     del_all_wrong_ips = False
 
-    with open('ip_name.json','r') as ip_name:
-        list_names_ip = json.load(ip_name)
-
+    list_names_ip = json.load(open('ip_name.json','r'))
     print(list_names_ip)
 
     for key, item in list_names_ip.items() :
         try:
             ftp_conn = ConnrectToFtp(compname=key, host=item)
             remout_comp_name = ftp_conn.find_comp_name()
+
+            time_stamp = time.asctime()
+
             if remout_comp_name == key:
                 print(remout_comp_name, item)
+                ftp_conn.file_log.write(f'{time_stamp} {remout_comp_name} {item}\n')
             else:
                 if remout_comp_name == '':
                     ftp_conn.create_and_send_temp_file()
                 else:
                     print(remout_comp_name, key, item)
+                    ftp_conn.file_log.write(time_stamp,'  ',remout_comp_name, key, item,'\n')
                     if del_all_wrong_ips: ftp_conn.del_remoute_file()
 
 
-            ftp_conn.close()
-        except:
-            print(f'Соединение с {item} говно!')
 
+        except:
+            print(f'Соединение с {item} {key}  говно!')
+            ftp_conn.file_log.write(f'{time_stamp}  Соединение с {item} {key}  говно!\n')
