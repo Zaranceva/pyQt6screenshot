@@ -1,5 +1,6 @@
 from PyQt6 import QtCore, QtWidgets
 import sys, time
+from urllib import request
 
 print(QtCore.PYQT_VERSION_STR)
 
@@ -25,8 +26,8 @@ class MyWindow(QtWidgets.QWidget):
         self.btnQuit.clicked.connect(QtWidgets.QApplication.instance().quit)
         self.btnStartTread.clicked.connect(self.on_clicked)
         self.newThread.started.connect(self.on_started)
+        self.newThread.mysignal.connect(self.on_change,QtCore.Qt.ConnectionType.AutoConnection)
         self.newThread.finished.connect(self.on_finished)
-        self.newThread.mysignal.connect(self.on_change,QtCore.Qt.ConnectionType.QueuedConnection)
 
     def on_clicked(self):
         self.btnStartTread.setDisabled(True)
@@ -34,7 +35,7 @@ class MyWindow(QtWidgets.QWidget):
     def on_started(self):
         self.label.setText('Запущено')
     def on_finished(self):
-        self.label.setText('Завершино')
+        self.label.setText('Завершено')
         self.btnStartTread.setDisabled(False)
     def on_change(self,s):
         self.label.setText(s)
@@ -52,6 +53,12 @@ class QmyThread(QtCore.QThread):
 
 
 if __name__ == '__main__':
+
+    newconn = request.urlopen(url='https://python.org')
+    # if newconn.getStatus() == 200:
+    #     print(newconn.getData())
+    # else:
+    #    print('Connection error code: ', newconn.getStatus())
     app = QtWidgets.QApplication(sys.argv)
     window = MyWindow()
     window.setWindowTitle('Заголовок окна')
